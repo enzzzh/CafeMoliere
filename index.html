@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Café Molière — Menu</title>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #FCECBB;
+    --warm-white: #FCECBB;
+    --espresso: #676C72;
+    --brown: #676C72;
+    --caramel: #FF5E00;
+    --gold: #FF5E00;
+    --soft-brown: #676C72;
+    --light-tan: rgba(103,108,114,0.2);
+    --muted: #676C72;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background-color: #FCECBB;
+    color: #676C72;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grain texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background-color: #FF5E00;
+    padding: 0;
+    margin: 0;
+    display: block;
+    line-height: 0;
+  }
+
+  header img {
+    width: 100%;
+    height: auto;
+    max-height: 420px;
+    object-fit: contain;
+    object-position: center center;
+    display: block;
+    margin: 0;
+    background-color: #FF5E00;
+  }
+
+  /* ── CART BAR ── */
+  .cart-bar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #FCECBB;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(103,108,114,0.2);
+    transition: all 0.3s;
+  }
+
+  .cart-info {
+    font-size: 12px;
+    font-weight: 400;
+    color: #676C72;
+    letter-spacing: 0.05em;
+  }
+
+  .cart-info span {
+    color: #FF5E00;
+    font-weight: 600;
+  }
+
+  .order-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #FF5E00;
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    padding: 9px 18px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .order-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(37,211,102,0.35);
+  }
+
+  .order-btn svg {
+    width: 14px; height: 14px; flex-shrink: 0;
+  }
+
+  .order-btn.empty {
+    background: rgba(103,108,114,0.3);
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  /* ── NAV TABS ── */
+  .tabs {
+    display: flex;
+    overflow-x: auto;
+    gap: 0;
+    background: #FCECBB;
+    border-bottom: 1px solid rgba(103,108,114,0.2);
+    padding: 0 16px;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+
+  .tab {
+    flex-shrink: 0;
+    padding: 14px 18px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #3A3D40;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .tab.active {
+    color: #FF5E00;
+    border-bottom-color: #FF5E00;
+  }
+
+  /* ── MAIN CONTENT ── */
+  main {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 0 0 120px;
+  }
+
+  .section {
+    display: none;
+    animation: fadeUp 0.4s ease forwards;
+  }
+  .section.active { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .section-header {
+    padding: 32px 20px 16px;
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+  }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #3A3D40;
+  }
+
+  .section-title em {
+    font-style: italic;
+    color: #FF5E00;
+  }
+
+  .section-line {
+    flex: 1;
+    height: 1px;
+    background: rgba(103,108,114,0.2);
+  }
+
+  /* ── MENU ITEM ── */
+  .item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 20px;
+    border-bottom: 1px solid rgba(103,108,114,0.12);
+    transition: background 0.2s;
+  }
+
+  .item:hover { background: rgba(103,108,114,0.06); }
+
+  .item-emoji {
+    font-size: 1.8rem;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border-radius: 12px;
+    flex-shrink: 0;
+    border: 1px solid rgba(103,108,114,0.15);
+  }
+
+  .item-info { flex: 1; min-width: 0; }
+
+  .item-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #2E3033;
+    letter-spacing: 0.01em;
+  }
+
+  .item-desc {
+    font-size: 11px;
+    color: #fff;
+    background: #676C72;
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-top: 3px;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+  }
+
+  .item-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .item-price {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #FF5E00;
+  }
+
+  .item-price small {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 9px;
+    font-weight: 400;
+    color: #676C72;
+    letter-spacing: 0.05em;
+  }
+
+  .qty-ctrl {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    border: 1px solid rgba(103,108,114,0.2);
+    border-radius: 50px;
+    padding: 3px 8px;
+  }
+
+  .qty-btn {
+    width: 20px; height: 20px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: #FF5E00;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    transition: background 0.15s;
+    line-height: 1;
+    font-weight: 300;
+  }
+  .qty-btn:hover { background: rgba(255,94,0,0.1); }
+
+  .qty-num {
+    font-size: 12px;
+    font-weight: 500;
+    color: #676C72;
+    min-width: 12px;
+    text-align: center;
+  }
+
+  /* ── FLOATING ORDER BTN ── */
+  .float-btn {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 200;
+    background: #FF5E00;
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    padding: 14px 28px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 6px 28px rgba(255,94,0,0.4);
+    transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s;
+    opacity: 0;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .float-btn.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .float-btn:hover {
+    transform: translateX(-50%) translateY(-2px);
+    box-shadow: 0 10px 36px rgba(255,94,0,0.5);
+  }
+
+  .float-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    padding: 24px;
+    font-size: 11px;
+    color: #676C72;
+    letter-spacing: 0.08em;
+  }
+
+  /* ── NAME MODAL ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(44,26,14,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 500;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .modal-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .modal {
+    background: #FCECBB;
+    border-radius: 24px 24px 0 0;
+    padding: 32px 24px 40px;
+    width: 100%;
+    max-width: 500px;
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .modal-overlay.visible .modal {
+    transform: translateY(0);
+  }
+
+  .modal-handle {
+    width: 40px;
+    height: 4px;
+    background: rgba(103,108,114,0.3);
+    border-radius: 2px;
+    margin: 0 auto 24px;
+  }
+
+  .modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    font-weight: 400;
+    color: #676C72;
+    margin-bottom: 6px;
+  }
+
+  .modal-title em { font-style: italic; color: #FF5E00; }
+
+  .modal-subtitle {
+    font-size: 12px;
+    color: #676C72;
+    margin-bottom: 20px;
+    letter-spacing: 0.03em;
+  }
+
+  .name-input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1.5px solid rgba(103,108,114,0.3);
+    border-radius: 12px;
+    background: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    color: #676C72;
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 16px;
+  }
+
+  .name-input:focus { border-color: #FF5E00; }
+  .name-input::placeholder { color: rgba(103,108,114,0.5); }
+
+  .modal-confirm {
+    width: 100%;
+    padding: 15px;
+    background: #FF5E00;
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+  }
+
+  .modal-confirm:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(37,211,102,0.4);
+  }
+
+  .modal-confirm svg { width: 18px; height: 18px; }
+
+  .modal-cancel {
+    width: 100%;
+    padding: 12px;
+    background: none;
+    border: none;
+    color: #676C72;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    margin-top: 8px;
+    letter-spacing: 0.03em;
+  }
+</style>
+</head>
+<body>
+
+<header><img src="header.png" alt="Le Café Molière" /></header>
+
+<!-- Sticky cart bar -->
+<div class="cart-bar">
+  <div class="cart-info">
+    <span id="cart-count">0</span> items · <span id="cart-total">$0.00</span>
+  </div>
+  <a id="top-order-btn" href="#" class="order-btn empty" onclick="event.preventDefault(); openModal()">
+    Order Now
+  </a>
+</div>
+
+<!-- Category tabs -->
+<div class="tabs">
+  <div class="tab active" onclick="showSection('hot')">☕ Boissons Chaudes</div>
+  <div class="tab" onclick="showSection('cold')">🧊 Boissons Froides</div>
+  <div class="tab" onclick="showSection('snacks')">🥐 Snacks</div>
+  <div class="tab" onclick="showSection('mains')">🍽️ Plats</div>
+  <div class="tab" onclick="showSection('desserts')">🍰 Desserts</div>
+</div>
+
+<main>
+
+  <!-- HOT DRINKS -->
+  <div class="section active" id="sec-hot">
+    <div class="section-header">
+      <h2 class="section-title">Boissons <em>Chaudes</em></h2>
+      <div class="section-line"></div>
+    </div>
+    <div id="items-hot"></div>
+  </div>
+
+  <!-- COLD DRINKS -->
+  <div class="section" id="sec-cold">
+    <div class="section-header">
+      <h2 class="section-title">Boissons <em>Froides</em></h2>
+      <div class="section-line"></div>
+    </div>
+    <div id="items-cold"></div>
+  </div>
+
+  <!-- SNACKS -->
+  <div class="section" id="sec-snacks">
+    <div class="section-header">
+      <h2 class="section-title">Snacks & <em>Viennoiseries</em></h2>
+      <div class="section-line"></div>
+    </div>
+    <div id="items-snacks"></div>
+  </div>
+
+  <!-- MAINS -->
+  <div class="section" id="sec-mains">
+    <div class="section-header">
+      <h2 class="section-title">Plats <em>Principaux</em></h2>
+      <div class="section-line"></div>
+    </div>
+    <div id="items-mains"></div>
+  </div>
+
+  <!-- DESSERTS -->
+  <div class="section" id="sec-desserts">
+    <div class="section-header">
+      <h2 class="section-title">Desserts <em>Précieux</em></h2>
+      <div class="section-line"></div>
+    </div>
+    <div id="items-desserts"></div>
+  </div>
+
+</main>
+
+<!-- Floating WhatsApp button -->
+<button id="float-btn" class="float-btn" onclick="openModal()">
+  Order Now (<span id="float-count">0</span>)
+</button>
+
+<!-- Name Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Almost <em>there!</em></div>
+    <p class="modal-subtitle">Fill in all fields to complete your order</p>
+    <input
+      class="name-input"
+      id="client-name"
+      type="text"
+      placeholder="Your full name"
+      autocomplete="name"
+      oninput="confirmOrder()"
+      onkeydown="if(event.key==='Enter') document.getElementById('client-phone').focus()"
+    />
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <div style="padding:14px 12px;background:rgba(103,108,114,0.15);border:1.5px solid rgba(103,108,114,0.2);border-radius:12px;font-size:15px;color:rgba(103,108,114,0.6);white-space:nowrap;user-select:none;">+961</div>
+      <input
+        class="name-input"
+        id="client-phone"
+        type="tel"
+        placeholder="70 123 456"
+        autocomplete="tel"
+        style="margin-bottom:0;flex:1;"
+        onkeydown="if(event.key==='Enter') document.getElementById('client-location').focus()"
+      />
+    </div>
+    <input
+      class="name-input"
+      id="client-location"
+      type="text"
+      placeholder="Your delivery address"
+      autocomplete="street-address"
+      oninput="confirmOrder()"
+      onkeydown="if(event.key==='Enter') placeOrder()"
+    />
+    <button id="modal-confirm-btn" class="modal-confirm" onclick="placeOrder()">
+      Place Order
+    </button>
+    <div id="order-success" style="display:none;text-align:center;padding:14px;background:rgba(76,175,80,0.15);border-radius:12px;color:#2E7D32;font-weight:500;font-size:14px;">
+      ✅ Order sent successfully!
+    </div>
+    <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+  </div>
+</div>
+
+<footer>© 2024 Café Molière · Tous les prix sont en Livres Libanaises (LL)</footer>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+// ── FIREBASE CONFIG ── (must be before menu script)
+const firebaseConfig = {
+  apiKey: "AIzaSyANahV1JOHQqEweg6e8i_LvltXNCTW-kIw",
+  authDomain: "cafe-moliere.firebaseapp.com",
+  projectId: "cafe-moliere",
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+</script>
+
+<script>
+// ── MENU DATA ──
+const MENU = {
+  hot: [
+    { id:'h1', emoji:'☕', name:'Expresso', desc:'Café américain', price:100000 },
+    { id:'h2', emoji:'☕', name:'Café Libanais', desc:'Café traditionnel libanais', price:100000 },
+    { id:'h3', emoji:'☕', name:'Mochaccino', desc:'Espresso, chocolat & lait', price:150000 },
+    { id:'h4', emoji:'🍵', name:'Thés & Tisanes', desc:'Sélection de thés chauds', price:150000 },
+    { id:'h5', emoji:'🍫', name:'Chocolat Chaud', desc:'Chocolat onctueux et chaud', price:150000 },
+  ],
+  cold: [
+    { id:'c1', emoji:'🥛', name:'Ayran', desc:'Boisson au yaourt fraîche', price:100000 },
+    { id:'c2', emoji:'🧋', name:'Ice Tea', desc:'Thé glacé maison', price:100000 },
+    { id:'c3', emoji:'💧', name:'Eau Plate', desc:'Eau minérale plate', price:50000 },
+    { id:'c4', emoji:'💧', name:'Eau Pétillante', desc:'Eau minérale gazeuse', price:100000 },
+    { id:'c5', emoji:'🥤', name:'Milkshake', desc:'Milkshake onctueux', price:100000 },
+    { id:'c6', emoji:'🍋', name:'Limonade Fraîche', desc:'Limonade pressée maison', price:150000 },
+    { id:'c7', emoji:'🍊', name:"Jus d'Orange Frais", desc:'Orange pressée à la minute', price:150000 },
+  ],
+  snacks: [
+    { id:'s1', emoji:'🥐', name:"Croissant Nature — L'Avare", desc:'Croissant nature pur beurre', price:150000 },
+    { id:'s2', emoji:'🌿', name:'Croissant Thym — Harpagon', desc:'Croissant au thym', price:150000 },
+    { id:'s3', emoji:'🧀', name:'Croissant Fromage — Le Valet', desc:'Croissant au fromage', price:150000 },
+    { id:'s4', emoji:'🍫', name:"Pain au Chocolat — L'Intendant", desc:'Pain au chocolat feuilleté', price:150000 },
+    { id:'s5', emoji:'🫓', name:"Mané2touché Thym — La Désargentée", desc:'Mané2touché au thym · Extra LL 150,000', price:120000 },
+    { id:'s6', emoji:'🧀', name:"Mané2touché Fromage — L'Embourgeoisée", desc:'Mané2touché au fromage · Extra LL 250,000', price:200000 },
+    { id:'s7', emoji:'🫙', name:'Moelleux Labné', desc:'Moelleux garni au labné', price:100000 },
+    { id:'s8', emoji:'🍫', name:'Moelleux Chocolat', desc:'Moelleux au chocolat fondant', price:100000 },
+    { id:'s9', emoji:'🧀', name:'Moelleux Halloumi', desc:'Moelleux au halloumi grillé', price:100000 },
+    { id:'s10', emoji:'🍫', name:'Crêpe Chocolat — Jean-Baptiste', desc:'Crêpe au chocolat', price:350000 },
+    { id:'s11', emoji:'🍌', name:'Crêpe Choco-Banane — Poquelin', desc:'Crêpe chocolat et banane', price:400000 },
+    { id:'s12', emoji:'🥦', name:'Assiette Crudités', desc:'Légumes frais de saison', price:100000 },
+    { id:'s13', emoji:'🌰', name:'Noix Crues', desc:'Mélange de noix fraîches', price:250000 },
+    { id:'s14', emoji:'🍿', name:'Pop Corn', desc:'Pop corn maison', price:150000 },
+    { id:'s15', emoji:'🍎', name:'Fruit de Saison', desc:'Un fruit frais du jour', price:50000 },
+  ],
+  mains: [
+    { id:'m1', emoji:'🥗', name:'Salade Crabe — La Précieuse', desc:'Salade au crabe · Mini LL 250,000', price:450000 },
+    { id:'m2', emoji:'🥗', name:'Salade Pâtes Thon — Le Vicomte', desc:'Pâtes au thon · Mini LL 250,000', price:450000 },
+    { id:'m3', emoji:'🥗', name:'Salade César Poulet — Le Marquis', desc:'César au poulet · Mini LL 250,000', price:450000 },
+    { id:'m4', emoji:'🥗', name:'Salade Grecque — La Galante', desc:'Salade grecque classique · Mini LL 250,000', price:450000 },
+    { id:'m5', emoji:'🥪', name:"Sandwich Dinde Fromage — L'Aristocrate", desc:'Dinde et fromage froids', price:400000 },
+    { id:'m6', emoji:'🥪', name:'Sandwich Feta Tomates — Elvire', desc:'Feta et tomates fraîches', price:400000 },
+    { id:'m7', emoji:'🥪', name:'Sandwich Halloumi Pesto — Sganarelle', desc:'Halloumi grillé et pesto', price:400000 },
+    { id:'m8', emoji:'🥪', name:'Sandwich Poulet Avocat — Don Carlos', desc:'Poulet et avocat frais', price:400000 },
+    { id:'m9', emoji:'🥪', name:'Club Sandwich — Le Commandeur', desc:'Club sandwich classique', price:350000 },
+    { id:'m10', emoji:'🥙', name:'Sandwich Rôti — Le Classique', desc:'Sandwich chaud au rôti', price:450000 },
+    { id:'m11', emoji:'🥙', name:'Chich Taouk — Le Comique', desc:'Sandwich chaud chich taouk', price:450000 },
+    { id:'m12', emoji:'🥙', name:'Honey Mustard Chicken — Le Tragique', desc:'Poulet sauce honey mustard chaud', price:450000 },
+    { id:'m13', emoji:'🍔', name:'Burger Viande — Le Hambourgeois', desc:'Burger au bœuf', price:500000 },
+    { id:'m14', emoji:'🍔', name:'Burger Poulet — Le Gentilhomme', desc:'Burger au poulet', price:500000 },
+    { id:'m15', emoji:'🍗', name:'Chicken Strips — Les Jourdains', desc:'Strips poulet sauce honey mustard', price:400000 },
+    { id:'m16', emoji:'🍟', name:'Frites', desc:'Frites maison croustillantes', price:200000 },
+    { id:'m17', emoji:'🍝', name:'Pâtes Beurre-Parmesan — Bélise', desc:'Pâtes au beurre et parmesan', price:400000 },
+    { id:'m18', emoji:'🍝', name:'Pâtes Sauce Rosée — Armande', desc:'Pâtes à la sauce rosée', price:400000 },
+    { id:'m19', emoji:'🍝', name:'Pâtes Sauce Tomate — Henriette', desc:'Pâtes à la tomate', price:400000 },
+    { id:'m20', emoji:'🍝', name:"Pâtes à la Crème — L'Intellectuelle", desc:'Pâtes à la crème fraîche', price:400000 },
+    { id:'m21', emoji:'🧀', name:"Mac & Cheese — L'Érudite", desc:'Macaroni au fromage', price:250000 },
+    { id:'m22', emoji:'🍕', name:'Pizza Libanaise — Octave', desc:'Pizza libanaise · Mini LL 200,000', price:500000 },
+    { id:'m23', emoji:'🍕', name:'Pizza Pepperoni — Silvestre', desc:'Pizza pepperoni', price:500000 },
+    { id:'m24', emoji:'🍕', name:'Pizza Margherita — Naples', desc:'Pizza margherita classique', price:450000 },
+    { id:'m25', emoji:'🍲', name:'Soupe du Jour — Malade Imaginaire', desc:'Soupe ou velouté du jour', price:300000 },
+    { id:'m26', emoji:'🌿', name:'Plat Végétarien — Tartuffe', desc:'Plat du jour végétarien', price:500000 },
+    { id:'m27', emoji:'🥩', name:'Plat Protéiné — Tartuffe', desc:'Plat du jour protéiné', price:600000 },
+  ],
+  desserts: [
+    { id:'d1', emoji:'🍓', name:'Salade de Fruits Frais', desc:'Fruits frais de saison', price:250000 },
+    { id:'d2', emoji:'🍮', name:'Jello', desc:'Gelée maison', price:150000 },
+    { id:'d3', emoji:'🍮', name:'Custard', desc:'Crème anglaise onctueuse', price:150000 },
+    { id:'d4', emoji:'🍰', name:'Lazy Cake', desc:'Gâteau biscuits et chocolat', price:200000 },
+    { id:'d5', emoji:'🍫', name:'Brownies', desc:'Brownies au chocolat fondant', price:200000 },
+    { id:'d6', emoji:'🧁', name:'Muffins', desc:'Muffins moelleux du jour', price:200000 },
+    { id:'d7', emoji:'🍩', name:'Donuts', desc:'Donuts glacés maison', price:200000 },
+    { id:'d8', emoji:'🎂', name:'Cheesecake', desc:'Cheesecake crémeux', price:250000 },
+    { id:'d9', emoji:'🍪', name:'Cookies', desc:'Cookies maison croustillants', price:200000 },
+    { id:'d10', emoji:'🍫', name:'Tarte au Chocolat', desc:'Tarte chocolat maison', price:250000 },
+    { id:'d11', emoji:'🍞', name:'Cakes — Marbré / Orange / Brioche', desc:'Sous cloche ou en sachet', price:150000 },
+    { id:'d12', emoji:'🍶', name:'Yaourts aux Fruits', desc:'Yaourt avec fruits frais', price:150000 },
+    { id:'d13', emoji:'🍶', name:'Yaourts Nature', desc:'Yaourt nature frais', price:150000 },
+  ]
+};
+
+// CHANGE THIS to your real WhatsApp number (961 + number without leading 0)
+const WA_NUMBER = '96171503555';
+
+// ── CART ──
+const cart = {};
+
+function getCart() {
+  let count = 0, total = 0;
+  for (const id in cart) {
+    if (cart[id] > 0) {
+      const item = findItem(id);
+      count += cart[id];
+      total += cart[id] * item.price;
+    }
+  }
+  return { count, total };
+}
+
+function formatPrice(p) {
+  return 'LL ' + p.toLocaleString();
+}
+
+function findItem(id) {
+  for (const cat of Object.values(MENU)) {
+    const f = cat.find(i => i.id === id);
+    if (f) return f;
+  }
+}
+
+function updateCart() {
+  const { count, total } = getCart();
+  document.getElementById('cart-count').textContent = count;
+  document.getElementById('cart-total').textContent = formatPrice(total);
+  document.getElementById('float-count').textContent = count;
+
+  const topBtn = document.getElementById('top-order-btn');
+  const floatBtn = document.getElementById('float-btn');
+
+  if (count > 0) {
+    topBtn.classList.remove('empty');
+    floatBtn.classList.add('visible');
+  } else {
+    topBtn.classList.add('empty');
+    floatBtn.classList.remove('visible');
+  }
+}
+
+function buildWhatsAppMsg(name, location) {
+  const clientName = name && name.trim() ? name.trim() : 'A customer';
+  const clientLocation = location && location.trim() ? location.trim() : 'Not provided';
+  let lines = [`Hello! My name is ${clientName} and I would like to place an order from Cafe Moliere:\n`];
+  for (const id in cart) {
+    if (cart[id] > 0) {
+      const item = findItem(id);
+      lines.push(`• ${item.name} x${cart[id]} — ${formatPrice(item.price * cart[id])}`);
+    }
+  }
+  const { total } = getCart();
+  lines.push(`\nTotal: ${formatPrice(total)}`);
+  lines.push(`\nDelivery address: ${clientLocation}`);
+  lines.push('\nThank you!');
+  return lines.join('\n');
+}
+
+function openModal() {
+  const { count } = getCart();
+  if (count === 0) return;
+  document.getElementById('modal-overlay').classList.add('visible');
+  setTimeout(() => document.getElementById('client-name').focus(), 400);
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('visible');
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+function confirmOrder() { /* kept for input listeners */ }
+
+async function placeOrder() {
+  const name     = document.getElementById('client-name').value.trim();
+  const phoneRaw = document.getElementById('client-phone').value.replace(/\s+/g, '').replace(/^0+/, '');
+  const phone    = '+961' + phoneRaw;
+  const location = document.getElementById('client-location').value.trim();
+
+  if (!name)          { document.getElementById('client-name').focus();     alert('Please enter your name.');            return; }
+  if (!phoneRaw)      { document.getElementById('client-phone').focus();    alert('Please enter your phone number.');    return; }
+  if (phoneRaw.length < 7) { document.getElementById('client-phone').focus(); alert('Please enter a valid phone number.'); return; }
+  if (!location)      { document.getElementById('client-location').focus(); alert('Please enter your delivery address.'); return; }
+
+  const items = [];
+  for (const id in cart) {
+    if (cart[id] > 0) {
+      const item = findItem(id);
+      items.push({ name: item.name, qty: cart[id], price: item.price * cart[id] });
+    }
+  }
+  const { total } = getCart();
+
+  const btn = document.getElementById('modal-confirm-btn');
+  btn.textContent = 'Sending...';
+  btn.style.opacity = '0.7';
+  btn.disabled = true;
+
+  try {
+    await db.collection('orders').add({
+      name, phone, address: location, items, total,
+      status: 'new',
+      time: new Date().toLocaleTimeString('fr-LB', { hour: '2-digit', minute: '2-digit' }),
+      date: new Date().toLocaleDateString('fr-LB'),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    btn.style.display = 'none';
+    document.getElementById('order-success').style.display = 'block';
+    document.querySelector('.modal-cancel').style.display = 'none';
+
+    setTimeout(() => {
+      for (const id in cart) cart[id] = 0;
+      ['hot','cold','snacks','mains','desserts'].forEach(renderSection);
+      updateCart();
+      document.getElementById('client-name').value = '';
+      document.getElementById('client-phone').value = '';
+      document.getElementById('client-location').value = '';
+      btn.textContent = 'Place Order';
+      btn.style.opacity = '1';
+      btn.disabled = false;
+      btn.style.display = 'block';
+      document.getElementById('order-success').style.display = 'none';
+      document.querySelector('.modal-cancel').style.display = 'block';
+      closeModal();
+    }, 2000);
+
+  } catch(e) {
+    alert('Could not send order. Please check your connection and try again.');
+    btn.textContent = 'Place Order';
+    btn.style.opacity = '1';
+    btn.disabled = false;
+    console.error(e);
+  }
+}
+
+// ── RENDER ──
+function renderSection(catKey) {
+  const container = document.getElementById('items-' + catKey);
+  container.innerHTML = '';
+  MENU[catKey].forEach(item => {
+    const qty = cart[item.id] || 0;
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `
+      <div class="item-emoji">${item.emoji}</div>
+      <div class="item-info">
+        <div class="item-name">${item.name}</div>
+        <div class="item-desc">${item.desc}</div>
+      </div>
+      <div class="item-right">
+        <div class="item-price">${formatPrice(item.price)} <small>LL</small></div>
+        <div class="qty-ctrl">
+          <button class="qty-btn" onclick="changeQty('${item.id}', -1)">−</button>
+          <span class="qty-num" id="qty-${item.id}">${qty}</span>
+          <button class="qty-btn" onclick="changeQty('${item.id}', 1)">+</button>
+        </div>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function changeQty(id, delta) {
+  cart[id] = Math.max(0, (cart[id] || 0) + delta);
+  document.getElementById('qty-' + id).textContent = cart[id];
+  updateCart();
+}
+
+function showSection(key) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('sec-' + key).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// Init
+['hot','cold','snacks','mains','desserts'].forEach(renderSection);
+updateCart();
+
+// Firebase initialized above
+</script>
+
+</body>
+</html>
