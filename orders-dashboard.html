@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Café Molière — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#1A1A1A;color:#fff;font-family:'DM Sans',sans-serif;min-height:100vh}
+
+  /* HEADER */
+  .dash-header{background:#FF5E00;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200}
+  .dash-title{font-family:'Playfair Display',serif;font-size:1.1rem;color:#fff;font-weight:400}
+  .dash-title em{font-style:italic}
+  .header-right{display:flex;align-items:center;gap:10px}
+  .live-dot{width:8px;height:8px;background:#FCECBB;border-radius:50%;animation:pulse 1.5s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+  .conn-badge{font-size:10px;padding:3px 10px;border-radius:20px;font-weight:600;letter-spacing:0.05em}
+  .conn-badge.on{background:rgba(76,175,80,0.25);color:#4CAF50}
+  .conn-badge.off{background:rgba(255,255,255,0.15);color:#FCECBB}
+
+  /* TABS */
+  .tabs-bar{display:flex;background:#222;border-bottom:1px solid #333}
+  .tab-btn{flex:1;padding:12px;font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#666;background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s}
+  .tab-btn.active{color:#FF5E00;border-bottom-color:#FF5E00}
+  .tab-btn .tab-count{display:inline-block;background:#FF5E00;color:#fff;border-radius:10px;padding:1px 6px;font-size:9px;margin-left:4px;vertical-align:middle}
+  .tab-btn.active .tab-count{background:#fff;color:#FF5E00}
+
+  /* STATS */
+  .stats-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#111}
+  .stat{background:#1E1E1E;padding:12px;text-align:center}
+  .stat-num{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:#FF5E00;line-height:1}
+  .stat-label{font-size:9px;color:#555;letter-spacing:0.12em;text-transform:uppercase;margin-top:3px}
+
+  /* COLUMNS */
+  .tab-panel{display:none;padding:12px;gap:12px}
+  .tab-panel.active{display:grid;grid-template-columns:repeat(3,1fr)}
+  @media(max-width:700px){.tab-panel.active{grid-template-columns:1fr}}
+
+  .col-label{font-size:10px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+  .col-label.new{color:#FF5E00}.col-label.prep{color:#F5A623}.col-label.ready{color:#4CAF50}
+  .col-badge{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700}
+  .col-label.new .col-badge{background:#FF5E00;color:#fff}
+  .col-label.prep .col-badge{background:#F5A623;color:#fff}
+  .col-label.ready .col-badge{background:#4CAF50;color:#fff}
+
+  /* ORDER CARD — COLLAPSED */
+  .order-card{background:#2A2A2A;border-radius:10px;margin-bottom:8px;border:1px solid #333;overflow:hidden;animation:slideIn 0.3s ease}
+  @keyframes slideIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+  .card-header{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;cursor:pointer;user-select:none;transition:background 0.15s}
+  .card-header:hover{background:#333}
+  .card-name{font-weight:600;font-size:0.88rem;color:#FCECBB}
+  .card-meta{font-size:10px;color:#888;margin-top:1px}
+  .card-right{display:flex;align-items:center;gap:8px}
+  .card-total-badge{font-size:10px;font-weight:600;color:#FF5E00;background:rgba(255,94,0,0.1);padding:2px 7px;border-radius:10px}
+  .card-chevron{color:#555;font-size:12px;transition:transform 0.2s}
+  .card-chevron.open{transform:rotate(180deg)}
+
+  /* ORDER CARD — EXPANDED */
+  .card-body{display:none;padding:0 14px 12px;border-top:1px solid #333}
+  .card-body.open{display:block}
+  .card-items{padding-top:10px;margin-bottom:8px}
+  .card-item{display:flex;justify-content:space-between;font-size:11px;color:#bbb;padding:3px 0}
+  .card-item span:last-child{color:#777}
+  .card-total-row{display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:#FCECBB;border-top:1px solid #333;padding-top:6px;margin-bottom:10px}
+  .card-address{font-size:11px;color:#888;margin-bottom:10px}
+  .card-actions{display:flex;gap:6px}
+  .btn{padding:8px 10px;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:opacity 0.15s,transform 0.15s;flex:1}
+  .btn:hover{opacity:0.85;transform:translateY(-1px)}
+  .btn-prep{background:#F5A623;color:#fff}
+  .btn-ready{background:#4CAF50;color:#fff}
+  .btn-wa{background:#25D366;color:#fff}
+  .btn-clear{background:#444;color:#aaa}
+  .btn-del{background:#2A2A2A;border:1px solid #444;color:#666;flex:0 0 34px}
+
+  /* EMPTY */
+  .empty{text-align:center;padding:30px 16px;color:#444;font-size:12px}
+  .empty div{font-size:1.8rem;margin-bottom:6px}
+
+  /* HISTORY TAB */
+  .history-panel{display:none;padding:12px}
+  .history-panel.active{display:block}
+  .history-day{margin-bottom:10px;border-radius:10px;overflow:hidden;border:1px solid #2E2E2E}
+  .history-day-header{background:#222;padding:11px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none}
+  .history-day-header:hover{background:#2A2A2A}
+  .history-day-title{font-size:12px;font-weight:600;color:#FCECBB;letter-spacing:0.05em}
+  .history-day-count{font-size:10px;color:#888}
+  .history-day-chevron{color:#555;font-size:12px;transition:transform 0.2s}
+  .history-day-chevron.open{transform:rotate(180deg)}
+  .history-day-body{display:none}
+  .history-day-body.open{display:block}
+  .history-item{padding:10px 14px;border-top:1px solid #1E1E1E;cursor:pointer;transition:background 0.15s}
+  .history-item:hover{background:#222}
+  .history-item-header{display:flex;justify-content:space-between;align-items:center}
+  .history-item-name{font-size:12px;font-weight:600;color:#aaa}
+  .history-item-time{font-size:10px;color:#555}
+  .history-item-body{display:none;margin-top:8px}
+  .history-item-body.open{display:block}
+  .history-item-row{display:flex;justify-content:space-between;font-size:11px;color:#777;padding:2px 0}
+  .history-item-total{display:flex;justify-content:space-between;font-size:11px;font-weight:600;color:#888;border-top:1px solid #2A2A2A;padding-top:5px;margin-top:5px}
+  .history-empty{text-align:center;padding:40px;color:#444;font-size:12px}
+
+  /* NOTIFICATION */
+  .notif{position:fixed;top:65px;right:16px;background:#FF5E00;color:#fff;padding:11px 16px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:0 4px 20px rgba(255,94,0,0.4);z-index:999;animation:notifIn 0.3s ease;max-width:240px}
+  @keyframes notifIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+</style>
+</head>
+<body>
+
+<div class="dash-header">
+  <div class="dash-title">Café <em>Molière</em> — Dashboard</div>
+  <div class="header-right">
+    <span class="conn-badge off" id="conn-badge">● Connecting</span>
+    <div class="live-dot"></div>
+  </div>
+</div>
+
+<div class="stats-bar">
+  <div class="stat"><div class="stat-num" id="sn">0</div><div class="stat-label">New</div></div>
+  <div class="stat"><div class="stat-num" id="sp">0</div><div class="stat-label">Preparing</div></div>
+  <div class="stat"><div class="stat-num" id="sr">0</div><div class="stat-label">Ready</div></div>
+</div>
+
+<div class="tabs-bar">
+  <button class="tab-btn active" onclick="switchTab('orders',this)">🗂 Orders <span class="tab-count" id="tc-orders">0</span></button>
+  <button class="tab-btn" onclick="switchTab('history',this)">📋 History <span class="tab-count" id="tc-history">0</span></button>
+</div>
+
+<!-- ORDERS TAB -->
+<div class="tab-panel active" id="tab-orders">
+  <div>
+    <div class="col-label new">🆕 New <div class="col-badge" id="bn">0</div></div>
+    <div id="col-new"></div>
+  </div>
+  <div>
+    <div class="col-label prep">🍳 Preparing <div class="col-badge" id="bp">0</div></div>
+    <div id="col-prep"></div>
+  </div>
+  <div>
+    <div class="col-label ready">✅ Ready <div class="col-badge" id="br">0</div></div>
+    <div id="col-ready"></div>
+  </div>
+</div>
+
+<!-- HISTORY TAB -->
+<div class="history-panel" id="tab-history">
+  <div id="history-content"></div>
+</div>
+
+<script>
+// ── FIREBASE CONFIG ── Replace with your own
+const firebaseConfig = {
+  apiKey:     "AIzaSyANahV1JOHQqEweg6e8i_LvltXNCTW-kIw",
+  authDomain: "cafe-moliere.firebaseapp.com",
+  projectId:  "cafe-moliere",
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ── STATE ──
+let orders = {};
+let history = {};
+let firstLoad = true;
+let openCards = new Set();
+let openDays = new Set();
+let openHistoryItems = new Set();
+
+function formatLL(n){ return 'LL ' + Number(n).toLocaleString(); }
+
+// ── TABS ──
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel, .history-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ── TOGGLE CARD ──
+function toggleCard(id) {
+  if (openCards.has(id)) openCards.delete(id); else openCards.add(id);
+  render();
+}
+
+function toggleDay(date) {
+  if (openDays.has(date)) openDays.delete(date); else openDays.add(date);
+  renderHistory();
+}
+
+function toggleHistoryItem(id) {
+  if (openHistoryItems.has(id)) openHistoryItems.delete(id); else openHistoryItems.add(id);
+  renderHistory();
+}
+
+// ── ACTIONS ──
+async function moveOrder(id, status) {
+  await db.collection('orders').doc(id).update({ status });
+}
+
+async function clearToHistory(id) {
+  const o = orders[id];
+  if (!o) return;
+  await db.collection('orders').doc(id).update({ status: 'history' });
+}
+
+async function deleteOrder(id) {
+  await db.collection('orders').doc(id).delete();
+}
+
+function sendWhatsApp(phone, name) {
+  const msg = `Hello ${name}! Your order at Café Molière is ready for delivery. Thank you!`;
+  window.open(`https://wa.me/961${phone.replace(/^0/, '')}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+// ── RENDER CARD ──
+function renderCard(id, o) {
+  const isOpen = openCards.has(id);
+  const isNew  = o.status === 'new';
+  const isPrep = o.status === 'preparing';
+  const isReady= o.status === 'ready';
+
+  const actions = isNew ? `
+    <button class="btn btn-prep" onclick="event.stopPropagation();moveOrder('${id}','preparing')">→ Preparing</button>
+    <button class="btn btn-del" onclick="event.stopPropagation();deleteOrder('${id}')">🗑</button>
+  ` : isPrep ? `
+    <button class="btn btn-ready" onclick="event.stopPropagation();moveOrder('${id}','ready')">→ Ready</button>
+    <button class="btn btn-del" onclick="event.stopPropagation();deleteOrder('${id}')">🗑</button>
+  ` : `
+    <button class="btn btn-wa" onclick="event.stopPropagation();sendWhatsApp('${o.phone||''}','${o.name}')">WhatsApp Client</button>
+    <button class="btn btn-clear" onclick="event.stopPropagation();clearToHistory('${id}')">Clear ✓</button>
+  `;
+
+  return `
+    <div class="order-card">
+      <div class="card-header" onclick="toggleCard('${id}')">
+        <div>
+          <div class="card-name">${o.name}</div>
+          <div class="card-meta">${o.time} · ${o.address}</div>
+        </div>
+        <div class="card-right">
+          <span class="card-total-badge">${formatLL(o.total)}</span>
+          <span class="card-chevron ${isOpen ? 'open' : ''}">▼</span>
+        </div>
+      </div>
+      <div class="card-body ${isOpen ? 'open' : ''}">
+        <div class="card-items">
+          ${(o.items||[]).map(i=>`
+            <div class="card-item"><span>${i.name} x${i.qty}</span><span>${formatLL(i.price)}</span></div>
+          `).join('')}
+        </div>
+        <div class="card-total-row"><span>Total</span><span>${formatLL(o.total)}</span></div>
+        <div class="card-address">📍 ${o.address}${o.phone ? ' · 📞 '+o.phone : ''}</div>
+        <div class="card-actions">${actions}</div>
+      </div>
+    </div>`;
+}
+
+// ── RENDER ORDERS ──
+function render() {
+  const byStatus = { new:[], preparing:[], ready:[] };
+  Object.entries(orders).forEach(([id,o]) => {
+    if (byStatus[o.status]) byStatus[o.status].push([id,o]);
+  });
+
+  const slots = [
+    { status:'new',       col:'col-new',  bn:'bn', sn:'sn', empty:'No new orders' },
+    { status:'preparing', col:'col-prep', bn:'bp', sn:'sp', empty:'Nothing cooking' },
+    { status:'ready',     col:'col-ready',bn:'br', sn:'sr', empty:'Nothing ready' },
+  ];
+
+  let total = 0;
+  slots.forEach(({status, col, bn, sn, empty}) => {
+    const entries = byStatus[status];
+    document.getElementById(bn).textContent = entries.length;
+    document.getElementById(sn).textContent = entries.length;
+    total += entries.length;
+    document.getElementById(col).innerHTML = entries.length
+      ? entries.map(([id,o]) => renderCard(id,o)).join('')
+      : `<div class="empty"><div>—</div>${empty}</div>`;
+  });
+  document.getElementById('tc-orders').textContent = total;
+}
+
+// ── RENDER HISTORY ──
+function renderHistory() {
+  const byDate = {};
+  Object.entries(history).forEach(([id,o]) => {
+    const date = o.date || 'Unknown date';
+    if (!byDate[date]) byDate[date] = [];
+    byDate[date].push([id,o]);
+  });
+
+  const hCount = Object.values(history).length;
+  document.getElementById('tc-history').textContent = hCount;
+
+  const container = document.getElementById('history-content');
+  if (!hCount) {
+    container.innerHTML = '<div class="history-empty">No history yet</div>';
+    return;
+  }
+
+  container.innerHTML = Object.entries(byDate).map(([date, entries]) => {
+    const isOpen = openDays.has(date);
+    const items = entries.map(([id,o]) => {
+      const iOpen = openHistoryItems.has(id);
+      return `
+        <div class="history-item" onclick="toggleHistoryItem('${id}')">
+          <div class="history-item-header">
+            <span class="history-item-name">${o.name} — ${formatLL(o.total)}</span>
+            <span class="history-item-time">${o.time} ▼</span>
+          </div>
+          <div class="history-item-body ${iOpen ? 'open' : ''}">
+            ${(o.items||[]).map(i=>`
+              <div class="history-item-row"><span>${i.name} x${i.qty}</span><span>${formatLL(i.price)}</span></div>
+            `).join('')}
+            <div class="history-item-total"><span>Total</span><span>${formatLL(o.total)}</span></div>
+            ${o.address ? `<div style="font-size:10px;color:#555;margin-top:4px">📍 ${o.address}</div>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+
+    return `
+      <div class="history-day">
+        <div class="history-day-header" onclick="toggleDay('${date}')">
+          <span class="history-day-title">📅 ${date}</span>
+          <span>
+            <span class="history-day-count">${entries.length} order${entries.length>1?'s':''}</span>
+            <span class="history-day-chevron ${isOpen?'open':''}"> ▼</span>
+          </span>
+        </div>
+        <div class="history-day-body ${isOpen?'open':''}">${items}</div>
+      </div>`;
+  }).join('');
+}
+
+// ── NOTIFICATION ──
+function showNotif(name) {
+  const el = document.createElement('div');
+  el.className = 'notif';
+  el.textContent = `New order from ${name}!`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// ── REAL-TIME LISTENER ──
+db.collection('orders').orderBy('createdAt','desc')
+  .onSnapshot(snapshot => {
+    document.getElementById('conn-badge').textContent = '● Live';
+    document.getElementById('conn-badge').className = 'conn-badge on';
+
+    snapshot.docChanges().forEach(change => {
+      const id   = change.doc.id;
+      const data = change.doc.data();
+
+      if (change.type === 'removed') {
+        delete orders[id];
+        delete history[id];
+      } else if (data.status === 'history') {
+        delete orders[id];
+        history[id] = data;
+      } else {
+        delete history[id];
+        if (change.type === 'added' && !firstLoad) showNotif(data.name);
+        orders[id] = data;
+      }
+    });
+
+    firstLoad = false;
+    render();
+    renderHistory();
+  }, () => {
+    document.getElementById('conn-badge').textContent = '● Offline';
+    document.getElementById('conn-badge').className = 'conn-badge off';
+  });
+</script>
+</body>
+</html>
