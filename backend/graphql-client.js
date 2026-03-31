@@ -1,4 +1,4 @@
-const GQL_ENDPOINT = ""; // Replace with the real GraphQL endpoint
+const GQL_ENDPOINT = "https://us-central1-cafe-moliere.cloudfunctions.net/graphql"; // Cloud Function
 
 async function gql(query, variables = {}) {
   const response = await fetch(GQL_ENDPOINT, {

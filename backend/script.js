@@ -1,8 +1,8 @@
 import { updateOrderStatusGQL, deleteOrderGQL } from './graphql-client.js';
 
-// ── REPLACE FIREBASE CONFIG 
+// ── FIREBASE CONFIG 
 const firebaseConfig = {
-  apiKey:     "AIzaSyANahV1JOHQqEweg6e8i_LvltXNCTW-kIw",
+  apiKey: "AIzaSyANahV1JOHQqEweg6e8i_LvltXNCTW-kIw", 
   authDomain: "cafe-moliere.github.io",
   projectId:  "cafe-moliere",
 };

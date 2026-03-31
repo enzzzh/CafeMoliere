@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Café Molière — Menu</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Sans:wght@300;400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    </link>
+</head>
+
+<body>
+
+    <header><img src="../src/header.png" alt="Le Café Molière" /></header>
+
+    <!-- Sticky cart bar -->
+    <div class="cart-bar">
+        <div class="cart-info">
+            <span id="cart-count">0</span> items · <span id="cart-total">$0.00</span>
+        </div>
+        <a id="top-order-btn" href="#" class="order-btn empty" onclick="event.preventDefault(); openModal()">
+            Order Now
+        </a>
+    </div>
+
+    <!-- Category tabs -->
+    <div class="tabs">
+        <div class="tab active" onclick="showSection('hot')">☕ Boissons Chaudes</div>
+        <div class="tab" onclick="showSection('cold')">🧊 Boissons Froides</div>
+        <div class="tab" onclick="showSection('snacks')">🥐 Snacks</div>
+        <div class="tab" onclick="showSection('mains')">🍽️ Plats</div>
+        <div class="tab" onclick="showSection('desserts')">🍰 Desserts</div>
+    </div>
+
+    <main>
+
+        <!-- HOT DRINKS -->
+        <div class="section active" id="sec-hot">
+            <div class="section-header">
+                <h2 class="section-title">Boissons <em>Chaudes</em></h2>
+                <div class="section-line"></div>
+            </div>
+            <div id="items-hot"></div>
+        </div>
+
+        <!-- COLD DRINKS -->
+        <div class="section" id="sec-cold">
+            <div class="section-header">
+                <h2 class="section-title">Boissons <em>Froides</em></h2>
+                <div class="section-line"></div>
+            </div>
+            <div id="items-cold"></div>
+        </div>
+
+        <!-- SNACKS -->
+        <div class="section" id="sec-snacks">
+            <div class="section-header">
+                <h2 class="section-title">Snacks & <em>Viennoiseries</em></h2>
+                <div class="section-line"></div>
+            </div>
+            <div id="items-snacks"></div>
+        </div>
+
+        <!-- MAINS -->
+        <div class="section" id="sec-mains">
+            <div class="section-header">
+                <h2 class="section-title">Plats <em>Principaux</em></h2>
+                <div class="section-line"></div>
+            </div>
+            <div id="items-mains"></div>
+        </div>
+
+        <!-- DESSERTS -->
+        <div class="section" id="sec-desserts">
+            <div class="section-header">
+                <h2 class="section-title">Desserts <em>Précieux</em></h2>
+                <div class="section-line"></div>
+            </div>
+            <div id="items-desserts"></div>
+        </div>
+
+    </main>
+
+    <!-- Floating WhatsApp button -->
+    <button id="float-btn" class="float-btn" onclick="openModal()">
+        Order Now (<span id="float-count">0</span>)
+    </button>
+
+    <!-- Name Modal -->
+    <div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+        <div class="modal">
+            <div class="modal-handle"></div>
+            <div class="modal-title">Almost <em>there!</em></div>
+            <p class="modal-subtitle">Fill in all fields to complete your order</p>
+            <input class="name-input" id="client-name" type="text" placeholder="Your full name" autocomplete="name"
+                oninput="confirmOrder()"
+                onkeydown="if(event.key==='Enter') document.getElementById('client-phone').focus()" />
+            <div style="display:flex;gap:8px;margin-bottom:16px;">
+                <div
+                    style="padding:14px 12px;background:rgba(103,108,114,0.15);border:1.5px solid rgba(103,108,114,0.2);border-radius:12px;font-size:15px;color:rgba(103,108,114,0.6);white-space:nowrap;user-select:none;">
+                    +961</div>
+                <input class="name-input" id="client-phone" type="tel" placeholder="70 123 456" autocomplete="tel"
+                    style="margin-bottom:0;flex:1;"
+                    onkeydown="if(event.key==='Enter') document.getElementById('client-location').focus()" />
+            </div>
+            <input class="name-input" id="client-location" type="text" placeholder="Your delivery address"
+                autocomplete="street-address" oninput="confirmOrder()"
+                onkeydown="if(event.key==='Enter') placeOrder()" />
+            <button id="modal-confirm-btn" class="modal-confirm" onclick="placeOrder()">
+                Place Order
+            </button>
+            <div id="order-success"
+                style="display:none;text-align:center;padding:14px;background:rgba(76,175,80,0.15);border-radius:12px;color:#2E7D32;font-weight:500;font-size:14px;">
+                ✅ Order sent successfully!
+            </div>
+            <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
+    <footer>© 2024 Café Molière · Tous les prix sont en Livres Libanaises (LL)</footer>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // ── FIREBASE CONFIG ── (must be before menu script)
+        const firebaseConfig = {
+            apiKey: "AIzaSyANahV1JOHQqEweg6e8i_LvltXNCTW-kIw",
+            authDomain: "cafe-moliere.firebaseapp.com",
+            projectId: "cafe-moliere",
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+    </script>
+
+    <script>
+        // ── MENU DATA ──
+        const MENU = {
+            hot: [
+                {id: 'h1', emoji: '☕', name: 'Expresso', desc: 'Café américain', price: 100000},
+                {id: 'h2', emoji: '☕', name: 'Café Libanais', desc: 'Café traditionnel libanais', price: 100000},
+                {id: 'h3', emoji: '☕', name: 'Mochaccino', desc: 'Espresso, chocolat & lait', price: 150000},
+                {id: 'h4', emoji: '🍵', name: 'Thés & Tisanes', desc: 'Sélection de thés chauds', price: 150000},
+                {id: 'h5', emoji: '🍫', name: 'Chocolat Chaud', desc: 'Chocolat onctueux et chaud', price: 150000},
+            ],
+            cold: [
+                {id: 'c1', emoji: '🥛', name: 'Ayran', desc: 'Boisson au yaourt fraîche', price: 100000},
+                {id: 'c2', emoji: '🧋', name: 'Ice Tea', desc: 'Thé glacé maison', price: 100000},
+                {id: 'c3', emoji: '💧', name: 'Eau Plate', desc: 'Eau minérale plate', price: 50000},
+                {id: 'c4', emoji: '💧', name: 'Eau Pétillante', desc: 'Eau minérale gazeuse', price: 100000},
+                {id: 'c5', emoji: '🥤', name: 'Milkshake', desc: 'Milkshake onctueux', price: 100000},
+                {id: 'c6', emoji: '🍋', name: 'Limonade Fraîche', desc: 'Limonade pressée maison', price: 150000},
+                {id: 'c7', emoji: '🍊', name: "Jus d'Orange Frais", desc: 'Orange pressée à la minute', price: 150000},
+            ],
+            snacks: [
+                {id: 's1', emoji: '🥐', name: "Croissant Nature — L'Avare", desc: 'Croissant nature pur beurre', price: 150000},
+                {id: 's2', emoji: '🌿', name: 'Croissant Thym — Harpagon', desc: 'Croissant au thym', price: 150000},
+                {id: 's3', emoji: '🧀', name: 'Croissant Fromage — Le Valet', desc: 'Croissant au fromage', price: 150000},
+                {id: 's4', emoji: '🍫', name: "Pain au Chocolat — L'Intendant", desc: 'Pain au chocolat feuilleté', price: 150000},
+                {id: 's5', emoji: '🫓', name: "Mané2touché Thym — La Désargentée", desc: 'Mané2touché au thym · Extra LL 150,000', price: 120000},
+                {id: 's6', emoji: '🧀', name: "Mané2touché Fromage — L'Embourgeoisée", desc: 'Mané2touché au fromage · Extra LL 250,000', price: 200000},
+                {id: 's7', emoji: '🫙', name: 'Moelleux Labné', desc: 'Moelleux garni au labné', price: 100000},
+                {id: 's8', emoji: '🍫', name: 'Moelleux Chocolat', desc: 'Moelleux au chocolat fondant', price: 100000},
+                {id: 's9', emoji: '🧀', name: 'Moelleux Halloumi', desc: 'Moelleux au halloumi grillé', price: 100000},
+                {id: 's10', emoji: '🍫', name: 'Crêpe Chocolat — Jean-Baptiste', desc: 'Crêpe au chocolat', price: 350000},
+                {id: 's11', emoji: '🍌', name: 'Crêpe Choco-Banane — Poquelin', desc: 'Crêpe chocolat et banane', price: 400000},
+                {id: 's12', emoji: '🥦', name: 'Assiette Crudités', desc: 'Légumes frais de saison', price: 100000},
+                {id: 's13', emoji: '🌰', name: 'Noix Crues', desc: 'Mélange de noix fraîches', price: 250000},
+                {id: 's14', emoji: '🍿', name: 'Pop Corn', desc: 'Pop corn maison', price: 150000},
+                {id: 's15', emoji: '🍎', name: 'Fruit de Saison', desc: 'Un fruit frais du jour', price: 50000},
+            ],
+            mains: [
+                {id: 'm1', emoji: '🥗', name: 'Salade Crabe — La Précieuse', desc: 'Salade au crabe · Mini LL 250,000', price: 450000},
+                {id: 'm2', emoji: '🥗', name: 'Salade Pâtes Thon — Le Vicomte', desc: 'Pâtes au thon · Mini LL 250,000', price: 450000},
+                {id: 'm3', emoji: '🥗', name: 'Salade César Poulet — Le Marquis', desc: 'César au poulet · Mini LL 250,000', price: 450000},
+                {id: 'm4', emoji: '🥗', name: 'Salade Grecque — La Galante', desc: 'Salade grecque classique · Mini LL 250,000', price: 450000},
+                {id: 'm5', emoji: '🥪', name: "Sandwich Dinde Fromage — L'Aristocrate", desc: 'Dinde et fromage froids', price: 400000},
+                {id: 'm6', emoji: '🥪', name: 'Sandwich Feta Tomates — Elvire', desc: 'Feta et tomates fraîches', price: 400000},
+                {id: 'm7', emoji: '🥪', name: 'Sandwich Halloumi Pesto — Sganarelle', desc: 'Halloumi grillé et pesto', price: 400000},
+                {id: 'm8', emoji: '🥪', name: 'Sandwich Poulet Avocat — Don Carlos', desc: 'Poulet et avocat frais', price: 400000},
+                {id: 'm9', emoji: '🥪', name: 'Club Sandwich — Le Commandeur', desc: 'Club sandwich classique', price: 350000},
+                {id: 'm10', emoji: '🥙', name: 'Sandwich Rôti — Le Classique', desc: 'Sandwich chaud au rôti', price: 450000},
+                {id: 'm11', emoji: '🥙', name: 'Chich Taouk — Le Comique', desc: 'Sandwich chaud chich taouk', price: 450000},
+                {id: 'm12', emoji: '🥙', name: 'Honey Mustard Chicken — Le Tragique', desc: 'Poulet sauce honey mustard chaud', price: 450000},
+                {id: 'm13', emoji: '🍔', name: 'Burger Viande — Le Hambourgeois', desc: 'Burger au bœuf', price: 500000},
+                {id: 'm14', emoji: '🍔', name: 'Burger Poulet — Le Gentilhomme', desc: 'Burger au poulet', price: 500000},
+                {id: 'm15', emoji: '🍗', name: 'Chicken Strips — Les Jourdains', desc: 'Strips poulet sauce honey mustard', price: 400000},
+                {id: 'm16', emoji: '🍟', name: 'Frites', desc: 'Frites maison croustillantes', price: 200000},
+                {id: 'm17', emoji: '🍝', name: 'Pâtes Beurre-Parmesan — Bélise', desc: 'Pâtes au beurre et parmesan', price: 400000},
+                {id: 'm18', emoji: '🍝', name: 'Pâtes Sauce Rosée — Armande', desc: 'Pâtes à la sauce rosée', price: 400000},
+                {id: 'm19', emoji: '🍝', name: 'Pâtes Sauce Tomate — Henriette', desc: 'Pâtes à la tomate', price: 400000},
+                {id: 'm20', emoji: '🍝', name: "Pâtes à la Crème — L'Intellectuelle", desc: 'Pâtes à la crème fraîche', price: 400000},
+                {id: 'm21', emoji: '🧀', name: "Mac & Cheese — L'Érudite", desc: 'Macaroni au fromage', price: 250000},
+                {id: 'm22', emoji: '🍕', name: 'Pizza Libanaise — Octave', desc: 'Pizza libanaise · Mini LL 200,000', price: 500000},
+                {id: 'm23', emoji: '🍕', name: 'Pizza Pepperoni — Silvestre', desc: 'Pizza pepperoni', price: 500000},
+                {id: 'm24', emoji: '🍕', name: 'Pizza Margherita — Naples', desc: 'Pizza margherita classique', price: 450000},
+                {id: 'm25', emoji: '🍲', name: 'Soupe du Jour — Malade Imaginaire', desc: 'Soupe ou velouté du jour', price: 300000},
+                {id: 'm26', emoji: '🌿', name: 'Plat Végétarien — Tartuffe', desc: 'Plat du jour végétarien', price: 500000},
+                {id: 'm27', emoji: '🥩', name: 'Plat Protéiné — Tartuffe', desc: 'Plat du jour protéiné', price: 600000},
+            ],
+            desserts: [
+                {id: 'd1', emoji: '🍓', name: 'Salade de Fruits Frais', desc: 'Fruits frais de saison', price: 250000},
+                {id: 'd2', emoji: '🍮', name: 'Jello', desc: 'Gelée maison', price: 150000},
+                {id: 'd3', emoji: '🍮', name: 'Custard', desc: 'Crème anglaise onctueuse', price: 150000},
+                {id: 'd4', emoji: '🍰', name: 'Lazy Cake', desc: 'Gâteau biscuits et chocolat', price: 200000},
+                {id: 'd5', emoji: '🍫', name: 'Brownies', desc: 'Brownies au chocolat fondant', price: 200000},
+                {id: 'd6', emoji: '🧁', name: 'Muffins', desc: 'Muffins moelleux du jour', price: 200000},
+                {id: 'd7', emoji: '🍩', name: 'Donuts', desc: 'Donuts glacés maison', price: 200000},
+                {id: 'd8', emoji: '🎂', name: 'Cheesecake', desc: 'Cheesecake crémeux', price: 250000},
+                {id: 'd9', emoji: '🍪', name: 'Cookies', desc: 'Cookies maison croustillants', price: 200000},
+                {id: 'd10', emoji: '🍫', name: 'Tarte au Chocolat', desc: 'Tarte chocolat maison', price: 250000},
+                {id: 'd11', emoji: '🍞', name: 'Cakes — Marbré / Orange / Brioche', desc: 'Sous cloche ou en sachet', price: 150000},
+                {id: 'd12', emoji: '🍶', name: 'Yaourts aux Fruits', desc: 'Yaourt avec fruits frais', price: 150000},
+                {id: 'd13', emoji: '🍶', name: 'Yaourts Nature', desc: 'Yaourt nature frais', price: 150000},
+            ]
+        };
+
+        // CHANGE THIS to your real WhatsApp number (961 + number without leading 0)
+        const WA_NUMBER = '96171503555';
+
+        // ── CART ──
+        const cart = {};
+
+        function getCart() {
+            let count = 0, total = 0;
+            for (const id in cart) {
+                if (cart[id] > 0) {
+                    const item = findItem(id);
+                    count += cart[id];
+                    total += cart[id] * item.price;
+                }
+            }
+            return {count, total};
+        }
+
+        function formatPrice(p) {
+            return 'LL ' + p.toLocaleString();
+        }
+
+        function findItem(id) {
+            for (const cat of Object.values(MENU)) {
+                const f = cat.find(i => i.id === id);
+                if (f) return f;
+            }
+        }
+
+        function updateCart() {
+            const {count, total} = getCart();
+            document.getElementById('cart-count').textContent = count;
+            document.getElementById('cart-total').textContent = formatPrice(total);
+            document.getElementById('float-count').textContent = count;
+
+            const topBtn = document.getElementById('top-order-btn');
+            const floatBtn = document.getElementById('float-btn');
+
+            if (count > 0) {
+                topBtn.classList.remove('empty');
+                floatBtn.classList.add('visible');
+            } else {
+                topBtn.classList.add('empty');
+                floatBtn.classList.remove('visible');
+            }
+        }
+
+        function buildWhatsAppMsg(name, location) {
+            const clientName = name && name.trim() ? name.trim() : 'A customer';
+            const clientLocation = location && location.trim() ? location.trim() : 'Not provided';
+            let lines = [`Hello! My name is ${clientName} and I would like to place an order from Cafe Moliere:\n`];
+            for (const id in cart) {
+                if (cart[id] > 0) {
+                    const item = findItem(id);
+                    lines.push(`• ${item.name} x${cart[id]} — ${formatPrice(item.price * cart[id])}`);
+                }
+            }
+            const {total} = getCart();
+            lines.push(`\nTotal: ${formatPrice(total)}`);
+            lines.push(`\nDelivery address: ${clientLocation}`);
+            lines.push('\nThank you!');
+            return lines.join('\n');
+        }
+
+        function openModal() {
+            const {count} = getCart();
+            if (count === 0) return;
+            document.getElementById('modal-overlay').classList.add('visible');
+            setTimeout(() => document.getElementById('client-name').focus(), 400);
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').classList.remove('visible');
+        }
+
+        function handleOverlayClick(e) {
+            if (e.target === document.getElementById('modal-overlay')) closeModal();
+        }
+
+        function confirmOrder() { /* kept for input listeners */}
+
+        async function placeOrder() {
+            const name = document.getElementById('client-name').value.trim();
+            const phoneRaw = document.getElementById('client-phone').value.replace(/\s+/g, '').replace(/^0+/, '');
+            const phone = '+961' + phoneRaw;
+            const location = document.getElementById('client-location').value.trim();
+
+            if (!name) {document.getElementById('client-name').focus(); alert('Please enter your name.'); return;}
+            if (!phoneRaw) {document.getElementById('client-phone').focus(); alert('Please enter your phone number.'); return;}
+            if (phoneRaw.length < 7) {document.getElementById('client-phone').focus(); alert('Please enter a valid phone number.'); return;}
+            if (!location) {document.getElementById('client-location').focus(); alert('Please enter your delivery address.'); return;}
+
+            const items = [];
+            for (const id in cart) {
+                if (cart[id] > 0) {
+                    const item = findItem(id);
+                    items.push({name: item.name, qty: cart[id], price: item.price * cart[id]});
+                }
+            }
+            const {total} = getCart();
+
+            const btn = document.getElementById('modal-confirm-btn');
+            btn.textContent = 'Sending...';
+            btn.style.opacity = '0.7';
+            btn.disabled = true;
+
+            try {
+                await db.collection('orders').add({
+                    name, phone, address: location, items, total,
+                    status: 'new',
+                    time: new Date().toLocaleTimeString('fr-LB', {hour: '2-digit', minute: '2-digit'}),
+                    date: new Date().toLocaleDateString('fr-LB'),
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                btn.style.display = 'none';
+                document.getElementById('order-success').style.display = 'block';
+                document.querySelector('.modal-cancel').style.display = 'none';
+
+                setTimeout(() => {
+                    for (const id in cart) cart[id] = 0;
+                    ['hot', 'cold', 'snacks', 'mains', 'desserts'].forEach(renderSection);
+                    updateCart();
+                    document.getElementById('client-name').value = '';
+                    document.getElementById('client-phone').value = '';
+                    document.getElementById('client-location').value = '';
+                    btn.textContent = 'Place Order';
+                    btn.style.opacity = '1';
+                    btn.disabled = false;
+                    btn.style.display = 'block';
+                    document.getElementById('order-success').style.display = 'none';
+                    document.querySelector('.modal-cancel').style.display = 'block';
+                    closeModal();
+                }, 2000);
+
+            } catch (e) {
+                alert('Could not send order. Please check your connection and try again.');
+                btn.textContent = 'Place Order';
+                btn.style.opacity = '1';
+                btn.disabled = false;
+                console.error(e);
+            }
+        }
+
+        // ── RENDER ──
+        function renderSection(catKey) {
+            const container = document.getElementById('items-' + catKey);
+            container.innerHTML = '';
+            MENU[catKey].forEach(item => {
+                const qty = cart[item.id] || 0;
+                const div = document.createElement('div');
+                div.className = 'item';
+                div.innerHTML = `
+      <div class="item-emoji">${item.emoji}</div>
+      <div class="item-info">
+        <div class="item-name">${item.name}</div>
+        <div class="item-desc">${item.desc}</div>
+      </div>
+      <div class="item-right">
+        <div class="item-price">${formatPrice(item.price)} <small>LL</small></div>
+        <div class="qty-ctrl">
+          <button class="qty-btn" onclick="changeQty('${item.id}', -1)">−</button>
+          <span class="qty-num" id="qty-${item.id}">${qty}</span>
+          <button class="qty-btn" onclick="changeQty('${item.id}', 1)">+</button>
+        </div>
+      </div>
+    `;
+                container.appendChild(div);
+            });
+        }
+
+        function changeQty(id, delta) {
+            cart[id] = Math.max(0, (cart[id] || 0) + delta);
+            document.getElementById('qty-' + id).textContent = cart[id];
+            updateCart();
+        }
+
+        function showSection(key) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('sec-' + key).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Init
+        ['hot', 'cold', 'snacks', 'mains', 'desserts'].forEach(renderSection);
+        updateCart();
+
+// Firebase initialized above
+    </script>
+
+</body>
+
+</html>
