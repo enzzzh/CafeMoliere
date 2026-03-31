@@ -1,0 +1,10 @@
+.venv/
+venv/
+ENV/
+.env
+.env.local
+.env.*.local
+*.log
+.firebase/
+.DS_Store
+node_modules/
